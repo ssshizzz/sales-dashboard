@@ -1,0 +1,146 @@
+.sales-page {
+  min-height: 100vh;
+  padding: 28px;
+  background: radial-gradient(circle at top, #1f2937 0%, #050505 55%);
+  color: #f8fafc;
+  font-family: system-ui, sans-serif;
+}
+
+.sales-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  margin-bottom: 28px;
+}
+
+.sales-header h1 {
+  margin: 0;
+  font-size: 32px;
+  letter-spacing: 0.04em;
+}
+
+.sales-header p,
+.updated {
+  color: #cbd5e1;
+}
+
+.gauge-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.gauge-card {
+  padding: 24px;
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(15,23,42,.96), rgba(2,6,23,.96));
+  border: 1px solid rgba(148,163,184,.3);
+  box-shadow: 0 20px 50px rgba(0,0,0,.4);
+}
+
+.gauge-card.total {
+  border-color: rgba(250,204,21,.65);
+}
+
+.gauge-card h2 {
+  margin: 0 0 18px;
+  font-size: 26px;
+}
+
+.gauge {
+  position: relative;
+  height: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.speed-gauge {
+  position: absolute;
+  top: 0;
+  width: 340px;
+  height: 220px;
+  overflow: visible;
+}
+
+.gauge-track {
+  fill: none;
+  stroke-width: 22;
+  stroke-linecap: butt;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,.12));
+}
+
+.gauge-track.red {
+  stroke: #ef4444;
+}
+
+.gauge-track.yellow {
+  stroke: #facc15;
+}
+
+.gauge-track.green {
+  stroke: #22c55e;
+}
+
+.gauge-tick {
+  fill: #e5e7eb;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.gauge-needle {
+  stroke: #f8fafc;
+  stroke-width: 5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 8px rgba(255,255,255,.85));
+}
+
+.gauge-center {
+  fill: #0f172a;
+  stroke: #334155;
+  stroke-width: 3;
+}
+
+.gauge-value {
+  position: absolute;
+  top: 130px;
+  font-size: 54px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.gauge-label {
+  position: absolute;
+  top: 192px;
+  color: #cbd5e1;
+  font-size: 20px;
+}
+
+.sales-box {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(15,23,42,.75);
+  border: 1px solid rgba(148,163,184,.22);
+}
+
+.sales-label {
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+.sales-value {
+  font-size: 28px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+@media (max-width: 900px) {
+  .gauge-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sales-header {
+    display: block;
+  }
+}
