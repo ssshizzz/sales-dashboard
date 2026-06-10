@@ -23,7 +23,7 @@ export default function SalesDashboard() {
     <div className="sales-page">
       <div className="sales-header">
         <div>
-          <h1>売上状況ダッシュボード</h1>
+          <h1> {data.salesDate} 売上状況ダッシュボード</h1>
           <p>前年比 / 月間売上</p>
         </div>
         <div className="updated">
@@ -174,4 +174,16 @@ function RankingTable({ title, rows }) {
       </table>
     </div>
   );
+}
+
+function formatSalesDate(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+
+  return `${y}${m}${d}`;
 }
