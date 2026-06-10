@@ -36,6 +36,7 @@ export default function SalesDashboard() {
           <SalesGaugeCard key={item.business} item={item} />
         ))}
       </div>
+      <RankingSection rankings={data.rankings} />
     </div>
   );
 }
@@ -125,4 +126,52 @@ function getIcon(name) {
   if (name.includes("ふぐ")) return "🐡";
   if (name.includes("寿司")) return "🍣";
   return "🏢";
+}
+
+function RankingSection({ rankings }) {
+   console.log("rankings", rankings);
+if (!rankings) return <div style={{ color: "white" }}>ランキングデータなし</div>;
+//  if (!rankings) return null;
+
+  return (
+    <div className="ranking-section">
+      <h2>店舗前年比ランキング TOP10</h2>
+
+      <div className="ranking-grid">
+        <RankingTable title="🍣 寿司 TOP10" rows={rankings.sushi || []} />
+        <RankingTable title="🐡 ふぐ TOP10" rows={rankings.fugu || []} />
+      </div>
+    </div>
+  );
+}
+
+function RankingTable({ title, rows }) {
+  return (
+    <div className="ranking-card">
+      <h3>{title}</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>順位</th>
+            <th>店舗</th>
+            <th>月間売上</th>
+            <th>前年比</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={`${title}-${row.rank}-${row.store}`}>
+              <td>{row.rank}</td>
+              <td>{row.store}</td>
+              <td>{Number(row.sales).toLocaleString("ja-JP", { maximumFractionDigits: 0 })} 千円</td>
+              <td className={row.yoy >= 100 ? "good" : "bad"}>
+                {Number(row.yoy).toFixed(1)}%
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }

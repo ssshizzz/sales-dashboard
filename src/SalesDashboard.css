@@ -144,3 +144,67 @@
     display: block;
   }
 }
+.ranking-section {
+  margin-top: 32px;
+}
+
+.ranking-section h2 {
+  margin: 0 0 18px;
+  font-size: 26px;
+}
+
+.ranking-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 22px;
+}
+
+.ranking-card {
+  padding: 22px;
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(15,23,42,.96), rgba(2,6,23,.96));
+  border: 1px solid rgba(148,163,184,.3);
+  box-shadow: 0 20px 50px rgba(0,0,0,.35);
+}
+
+.ranking-card h3 {
+  margin: 0 0 16px;
+  font-size: 22px;
+}
+
+.ranking-card table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ranking-card th,
+.ranking-card td {
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(148,163,184,.18);
+  text-align: left;
+}
+
+.ranking-card th {
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
+.ranking-card td {
+  font-size: 16px;
+}
+
+.ranking-card .good {
+  color: #22c55e;
+  font-weight: 800;
+}
+
+.ranking-card .bad {
+  color: #f87171;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .ranking-grid {
+    grid-template-columns: 1fr;
+  }
+}
