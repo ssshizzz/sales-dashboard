@@ -109,3 +109,22 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+.sales-page,
+.sales-page * {
+  color: #f8fafc;
+}
+
+.sales-page .updated,
+.sales-page .sales-label,
+.sales-page .gauge-label,
+.ranking-card th {
+  color: #cbd5e1;
+}
+
+.ranking-card .good {
+  color: #22c55e;
+}
+
+.ranking-card .bad {
+  color: #f87171;
+}
