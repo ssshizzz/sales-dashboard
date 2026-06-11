@@ -31,16 +31,11 @@
 }
 
 .gauge-card {
-  padding: 24px;
-  border-radius: 22px;
-  background: linear-gradient(145deg, rgba(15,23,42,.96), rgba(2,6,23,.96));
-  border: 1px solid rgba(148,163,184,.3);
-  box-shadow: 0 20px 50px rgba(0,0,0,.4);
+   border: 1px solid rgba(250,204,21,.35);
+   border-radius: 24px;
 }
 
-.gauge-card.total {
-  border-color: rgba(250,204,21,.65);
-}
+
 
 .gauge-card h2 {
   margin: 0 0 18px;
@@ -160,11 +155,8 @@
 }
 
 .ranking-card {
-  padding: 22px;
-  border-radius: 22px;
-  background: linear-gradient(145deg, rgba(15,23,42,.96), rgba(2,6,23,.96));
-  border: 1px solid rgba(148,163,184,.3);
-  box-shadow: 0 20px 50px rgba(0,0,0,.35);
+  border: 1px solid rgba(250,204,21,.35);
+  border-radius: 24px;
 }
 
 .ranking-card h3 {
@@ -207,4 +199,99 @@
   .ranking-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.summary-card-grid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.summary-card {
+  padding: 22px;
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(15,23,42,.96), rgba(2,6,23,.96));
+  border: 1px solid rgba(148,163,184,.3);
+  box-shadow: 0 20px 50px rgba(0,0,0,.35);
+}
+
+.summary-card.total {
+  border-color: rgba(250,204,21,.65);
+}
+
+.summary-card h3 {
+  margin: 0 0 18px;
+  font-size: 24px;
+}
+
+.summary-values {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.summary-values > div {
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(15,23,42,.75);
+  border: 1px solid rgba(148,163,184,.22);
+}
+
+.summary-label {
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+.summary-value {
+  margin-top: 6px;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .summary-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-values {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gauge-body {
+  display: flex;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.gauge-main {
+  flex: 1;
+}
+
+.side-stats {
+  width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+}
+
+.stat-card {
+  background: rgba(15,23,42,.75);
+  border: 1px solid rgba(148,163,184,.25);
+  border-radius: 14px;
+  padding: 14px;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #cbd5e1;
+}
+
+.stat-value {
+  margin-top: 6px;
+  font-size: 22px;
+  font-weight: 700;
 }

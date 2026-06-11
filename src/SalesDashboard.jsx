@@ -17,14 +17,19 @@ export default function SalesDashboard() {
     return <div className="sales-page">読み込み中...</div>;
   }
 
-  const cards = [...data.businesses, data.total];
-
+ const cards = buildMainGaugeCards(data);
+ const trendCount = data.trends?.length || 0;
+ const latestTrendDate =
+  data.trends?.length > 0
+    ? data.trends[data.trends.length - 1].salesDate
+    : "";
+ const summaryCards = buildSummaryCards(data);
   return (
     <div className="sales-page">
       <div className="sales-header">
         <div>
-          <h1> {data.salesDate} 売上状況ダッシュボード</h1>
-          <p>前年比 / 月間売上</p>
+          <h1>{formatSalesDate(data.salesDate)} 売上状況ダッシュボード</h1>
+
         </div>
         <div className="updated">
           更新日時：{new Date(data.updatedAt).toLocaleString("ja-JP")}
@@ -33,13 +38,37 @@ export default function SalesDashboard() {
 
       <div className="gauge-grid">
         {cards.map((item) => (
-          <SalesGaugeCard key={item.business} item={item} />
+        <SalesGaugeCard key={item.business} item={item} />
         ))}
       </div>
-      <RankingSection rankings={data.rankings} />
+      <div className="history-status-card">
+       <h3>📈 履歴データ状況</h3>
+
+       <div className="history-status-row">
+         <div>
+           <span>履歴件数</span>
+           <strong>{trendCount}</strong>
+         </div>
+
+        <div>
+          <span>最新履歴日</span>
+          <strong>{latestTrendDate}</strong>
+        </div>
+    </div>
+</div>
+       <RankingSection rankings={data.rankings} />
     </div>
   );
 }
+
+function formatSalesDate(value) {
+  if (!value) return "";
+
+  const str = String(value);
+
+  return `${Number(str.slice(0,4))}年${Number(str.slice(4,6))}月${Number(str.slice(6,8))}日`;
+}
+
 
 function SalesGaugeCard({ item }) {
   const yoy = Number(item.yoy || 0);
@@ -47,23 +76,63 @@ function SalesGaugeCard({ item }) {
 
   return (
     <div className={`gauge-card ${item.business === "全社" ? "total" : ""}`}>
-      <h2>{getIcon(item.business)} {item.business}</h2>
+    <h2>{getIcon(item.business)} {item.business} {item.period}</h2>
 
-      <div className="gauge">
-        <SpeedGauge value={yoy} />
+<div className="gauge-body">
 
-        <div className="gauge-value">{yoy.toFixed(1)}%</div>
-        <div className="gauge-label">前年比</div>
-      </div>
+  <div className="gauge-main">
 
-      <div className="sales-box">
-        <div className="sales-label">月間売上</div>
-        <div className="sales-value">
-          {sales.toLocaleString("ja-JP", { maximumFractionDigits: 0 })} 千円
-        </div>
+    <div className="gauge">
+      <SpeedGauge value={yoy} />
+
+      <div className="gauge-value">{yoy.toFixed(1)}%</div>
+      <div className="gauge-label">前年比</div>
+    </div>
+
+    <div className="sales-box">
+      <div className="sales-label">月間売上</div>
+      <div className="sales-value">
+        {formatSalesValue(sales, item.unitType)}
       </div>
     </div>
+
+  </div>
+
+  <div className="side-stats">
+
+    <div className="stat-card">
+      <div className="stat-label">当日売上</div>
+      <div className="stat-value">
+        {formatSalesValue(item.dailySales, "thousand")}
+      </div>
+    </div>
+
+    <div className="stat-card">
+      <div className="stat-label">年累計</div>
+      <div className="stat-value">
+        {formatSalesValue(item.yearlySales, "million")}
+      </div>
+    </div>
+
+  </div>
+
+</div>    </div>
   );
+}
+
+function formatSalesValue(value, unitType) {
+  const sales = Number(value || 0);
+
+  if (unitType === "million") {
+    return `${(sales / 100).toLocaleString("ja-JP", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1
+    })} 億円`;
+  }
+
+  return `${sales.toLocaleString("ja-JP", {
+    maximumFractionDigits: 0
+  })} 千円`;
 }
 
 function SpeedGauge({ value }) {
@@ -128,6 +197,45 @@ function getIcon(name) {
   return "🏢";
 }
 
+function buildGaugeCards(data) {
+  const rows = [
+    ...(data.businesses || []),
+    data.total
+  ].filter(Boolean);
+
+  const order = ["ふぐ", "寿司", "全社"];
+
+  return order.flatMap((businessName) => {
+    const row = rows.find((item) => item.business === businessName);
+
+    if (!row) return [];
+
+    return [
+      {
+        business: businessName,
+        period: "当日",
+        sales: row.dailySales,
+        yoy: row.yoy,
+        unitType: "thousand"
+      },
+      {
+        business: businessName,
+        period: "月間",
+        sales: row.monthlySales,
+        yoy: row.yoy,
+        unitType: "thousand"
+      },
+      {
+        business: businessName,
+        period: "年累計",
+        sales: row.yearlySales,
+        yoy: row.yoy,
+        unitType: "million"
+      }
+    ];
+  });
+}
+
 function RankingSection({ rankings }) {
    console.log("rankings", rankings);
 if (!rankings) return <div style={{ color: "white" }}>ランキングデータなし</div>;
@@ -176,14 +284,45 @@ function RankingTable({ title, rows }) {
   );
 }
 
-function formatSalesDate(value) {
-  if (!value) return "";
+function buildMainGaugeCards(data) {
+  const rows = [
+    ...(data.businesses || []),
+    data.total
+  ].filter(Boolean);
 
-  const date = new Date(value);
+  const order = ["ふぐ", "寿司", "全社"];
 
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
+  return order.map((businessName) => {
+    const row = rows.find((item) => item.business === businessName);
 
-  return `${y}${m}${d}`;
+ return {
+  business: businessName,
+  period: "月間",
+  sales: row?.monthlySales || 0,
+  dailySales: row?.dailySales || 0,
+  yearlySales: row?.yearlySales || 0,
+  yoy: row?.yoy || 0,
+  unitType: "thousand"
+};
+  });
 }
+
+function buildSummaryCards(data) {
+  const rows = [
+    ...(data.businesses || []),
+    data.total
+  ].filter(Boolean);
+
+  const order = ["ふぐ", "寿司", "全社"];
+
+  return order.map((businessName) => {
+    const row = rows.find((item) => item.business === businessName);
+
+    return {
+      business: businessName,
+      dailySales: row?.dailySales || 0,
+      yearlySales: row?.yearlySales || 0
+    };
+  });
+}
+
