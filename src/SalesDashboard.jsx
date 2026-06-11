@@ -18,11 +18,7 @@ export default function SalesDashboard() {
   }
 
  const cards = buildMainGaugeCards(data);
- const trendCount = data.trends?.length || 0;
- const latestTrendDate =
-  data.trends?.length > 0
-    ? data.trends[data.trends.length - 1].salesDate
-    : "";
+ 
  const summaryCards = buildSummaryCards(data);
   return (
     <div className="sales-page">
@@ -41,21 +37,7 @@ export default function SalesDashboard() {
         <SalesGaugeCard key={item.business} item={item} />
         ))}
       </div>
-      <div className="history-status-card">
-       <h3>📈 履歴データ状況</h3>
-
-       <div className="history-status-row">
-         <div>
-           <span>履歴件数</span>
-           <strong>{trendCount}</strong>
-         </div>
-
-        <div>
-          <span>最新履歴日</span>
-          <strong>{latestTrendDate}</strong>
-        </div>
-    </div>
-</div>
+ 
        <RankingSection rankings={data.rankings} />
     </div>
   );
