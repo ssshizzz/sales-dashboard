@@ -17,106 +17,299 @@ export default function SalesDashboard() {
     return <div className="sales-page">読み込み中...</div>;
   }
 
- const cards = buildMainGaugeCards(data);
- 
- const summaryCards = buildSummaryCards(data);
+  const cards = buildMainGaugeCards(data);
+
   return (
     <div className="sales-page">
       <div className="sales-header">
         <div>
-          <h1>{formatSalesDate(data.salesDate)} 売上状況ダッシュボードtest</h1>
-
+          <h1>{formatSalesDate(data.salesDate)} 売上状況ダッシュボード</h1>
         </div>
         <div className="updated">
-          更新日時：{new Date(data.updatedAt).toLocaleString("ja-JP")}
+          更新日時：{formatDateTime(data.updatedAt)}
         </div>
       </div>
 
-<div className="gauge-grid">
-  {cards.map((item) => (
-    <SalesGaugeCard key={item.business} item={item} />
-  ))}
-</div>
+      <div className="gauge-grid">
+        {cards.map((item) => (
+          <SalesGaugeCard key={item.business} item={item} />
+        ))}
+      </div>
 
-<SalesTrendSection trends={data.trends || []} salesDate={data.salesDate} />
+      <SalesTrendSection trends={data.trends || []} salesDate={data.salesDate} />
 
-<RankingSection rankings={data.rankings} />
+      <RankingSection rankings={data.rankings} />
     </div>
   );
 }
 
-function formatSalesDate(value) {
-  if (!value) return "";
-
-  const str = String(value);
-
-  return `${Number(str.slice(0,4))}年${Number(str.slice(4,6))}月${Number(str.slice(6,8))}日`;
-}
-
-
 function SalesGaugeCard({ item }) {
-  const yoy = Number(item.yoy || 0);
-  const sales = Number(item.sales || 0);
+  const yoy = safeNumber(item.yoy);
+  const sales = safeNumber(item.sales);
 
   return (
     <div className={`gauge-card ${item.business === "全社" ? "total" : ""}`}>
-    <h2>{getIcon(item.business)} {item.business} {item.period}</h2>
+      <h2>{getIcon(item.business)} {item.business} {item.period}</h2>
 
-<div className="gauge-body">
+      <div className="gauge-body">
+        <div className="gauge-main">
+          <div className="gauge">
+            <SpeedGauge value={yoy} />
+            <div className="gauge-value">{yoy.toFixed(1)}%</div>
+            <div className="gauge-label">前年比</div>
+          </div>
 
-  <div className="gauge-main">
+          <div className="sales-box">
+            <div className="sales-label">月間売上</div>
+            <div className="sales-value">
+              {formatSalesValue(sales, item.unitType)}
+            </div>
+          </div>
+        </div>
 
-    <div className="gauge">
-      <SpeedGauge value={yoy} />
+        <div className="side-stats">
+          <div className="stat-card">
+            <div className="stat-label">当日売上</div>
+            <div className="stat-value">
+              {formatSalesValue(item.dailySales, "thousand")}
+            </div>
+          </div>
 
-      <div className="gauge-value">{yoy.toFixed(1)}%</div>
-      <div className="gauge-label">前年比</div>
-    </div>
-
-    <div className="sales-box">
-      <div className="sales-label">月間売上</div>
-      <div className="sales-value">
-        {formatSalesValue(sales, item.unitType)}
+          <div className="stat-card">
+            <div className="stat-label">年累計</div>
+            <div className="stat-value">
+              {formatSalesValue(item.yearlySales, "million")}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-
-  </div>
-
-  <div className="side-stats">
-
-    <div className="stat-card">
-      <div className="stat-label">当日売上</div>
-      <div className="stat-value">
-        {formatSalesValue(item.dailySales, "thousand")}
-      </div>
-    </div>
-
-    <div className="stat-card">
-      <div className="stat-label">年累計</div>
-      <div className="stat-value">
-        {formatSalesValue(item.yearlySales, "million")}
-      </div>
-    </div>
-
-  </div>
-
-</div>    </div>
   );
 }
 
-function formatSalesValue(value, unitType) {
-  const sales = Number(value || 0);
+function SalesTrendSection({ trends, salesDate }) {
+  const rows = buildFiscalYearMonthlyTrendRows(trends, salesDate);
 
-  if (unitType === "million") {
-    return `${(sales / 100).toLocaleString("ja-JP", {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1
-    })} 億円`;
+  if (rows.length === 0) {
+    return (
+      <div className="trend-section">
+        <h2>期初から期末までの月間売上推移</h2>
+        <div className="trend-card trend-empty">
+          売上履歴データがありません
+        </div>
+      </div>
+    );
   }
 
-  return `${sales.toLocaleString("ja-JP", {
-    maximumFractionDigits: 0
-  })} 千円`;
+  return (
+    <div className="trend-section">
+      <h2>期初から期末までの月間売上推移</h2>
+
+      <div className="trend-legend">
+        <span>🍣 寿司</span>
+        <span>🐡 ふぐ</span>
+      </div>
+
+      <FiscalYearLineChart rows={rows} />
+    </div>
+  );
+}
+
+function FiscalYearLineChart({ rows }) {
+  const width = 1000;
+  const height = 320;
+  const padding = 48;
+
+  const max = Math.max(
+    ...rows.flatMap((row) => [
+      safeNumber(row.sushi),
+      safeNumber(row.fugu)
+    ]),
+    1
+  );
+
+  const sushiPoints = buildChartPoints(rows, "sushi", width, height, padding, max);
+  const fuguPoints = buildChartPoints(rows, "fugu", width, height, padding, max);
+
+  return (
+    <div className="trend-card">
+      <svg viewBox={`0 0 ${width} ${height}`} className="trend-chart">
+        <line
+          x1={padding}
+          y1={height - padding}
+          x2={width - padding}
+          y2={height - padding}
+          className="trend-axis"
+        />
+        <line
+          x1={padding}
+          y1={padding}
+          x2={padding}
+          y2={height - padding}
+          className="trend-axis"
+        />
+
+        {sushiPoints.length > 0 && (
+          <path d={pointsToPath(sushiPoints)} className="trend-line sushi" fill="none" />
+        )}
+
+        {fuguPoints.length > 0 && (
+          <path d={pointsToPath(fuguPoints)} className="trend-line fugu" fill="none" />
+        )}
+
+        {sushiPoints.map((point) => (
+          <circle
+            key={`sushi-${point.salesDate}`}
+            cx={point.x}
+            cy={point.y}
+            r="3"
+            className="trend-point sushi"
+          >
+            <title>
+              {point.label} 寿司：{Math.round(point.value).toLocaleString("ja-JP")} 千円
+            </title>
+          </circle>
+        ))}
+
+        {fuguPoints.map((point) => (
+          <circle
+            key={`fugu-${point.salesDate}`}
+            cx={point.x}
+            cy={point.y}
+            r="3"
+            className="trend-point fugu"
+          >
+            <title>
+              {point.label} ふぐ：{Math.round(point.value).toLocaleString("ja-JP")} 千円
+            </title>
+          </circle>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function buildFiscalYearMonthlyTrendRows(trends, salesDate) {
+  if (!salesDate) return [];
+
+  const baseDate = String(salesDate);
+  const year = Number(baseDate.slice(0, 4));
+  const month = Number(baseDate.slice(4, 6));
+
+  const fiscalStartYear = month >= 10 ? year : year - 1;
+  const start = Number(`${fiscalStartYear}1001`);
+  const end = Number(`${fiscalStartYear + 1}0930`);
+
+  const map = new Map();
+
+  (trends || [])
+    .filter((row) => {
+      const d = Number(row.salesDate);
+      return d >= start && d <= end;
+    })
+    .forEach((row) => {
+      const key = String(row.salesDate);
+      const current = map.get(key) || {
+        salesDate: key,
+        label: formatShortDate(key),
+        sushi: null,
+        fugu: null
+      };
+
+      if (row.business === "寿司") {
+        current.sushi = safeNumber(row.monthlySales);
+      }
+
+      if (row.business === "ふぐ") {
+        current.fugu = safeNumber(row.monthlySales);
+      }
+
+      map.set(key, current);
+    });
+
+  return Array.from(map.values())
+    .sort((a, b) => Number(a.salesDate) - Number(b.salesDate));
+}
+
+function buildChartPoints(rows, key, width, height, padding, max) {
+  return rows
+    .map((row, index) => {
+      const value = row[key];
+
+      if (value === null || value === undefined || !Number.isFinite(Number(value))) {
+        return null;
+      }
+
+      const x = padding + (index / Math.max(rows.length - 1, 1)) * (width - padding * 2);
+      const y = height - padding - (Number(value) / max) * (height - padding * 2);
+
+      return {
+        salesDate: row.salesDate,
+        label: row.label,
+        value: Number(value),
+        x,
+        y
+      };
+    })
+    .filter(Boolean);
+}
+
+function pointsToPath(points) {
+  return points
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+    .join(" ");
+}
+
+function RankingSection({ rankings }) {
+  if (!rankings) {
+    return <div style={{ color: "white" }}>ランキングデータなし</div>;
+  }
+
+  return (
+    <div className="ranking-section">
+      <h2>店舗前年比ランキング TOP10</h2>
+
+      <div className="ranking-grid">
+        <RankingTable title="🍣 寿司 TOP10" rows={rankings.sushi || []} />
+        <RankingTable title="🐡 ふぐ TOP10" rows={rankings.fugu || []} />
+      </div>
+    </div>
+  );
+}
+
+function RankingTable({ title, rows }) {
+  return (
+    <div className="ranking-card">
+      <h3>{title}</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>順位</th>
+            <th>店舗</th>
+            <th>月間売上</th>
+            <th>前年比</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const yoy = safeNumber(row.yoy);
+
+            return (
+              <tr key={`${title}-${row.rank}-${row.store}`}>
+                <td>{row.rank}</td>
+                <td>{row.store}</td>
+                <td>{formatSalesValue(row.sales, "thousand")}</td>
+                <td className={yoy >= 100 ? "good" : "bad"}>
+                  {yoy.toFixed(1)}%
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 function SpeedGauge({ value }) {
@@ -125,7 +318,7 @@ function SpeedGauge({ value }) {
   const yellowEnd = 100;
   const max = 120;
 
-  const clamped = Math.min(Math.max(value, min), max);
+  const clamped = Math.min(Math.max(safeNumber(value), min), max);
 
   const angleFromValue = (v) => {
     return -90 + ((v - min) / (max - min)) * 180;
@@ -167,131 +360,7 @@ function SpeedGauge({ value }) {
   );
 }
 
-function polarToCartesian(cx, cy, r, angleInDegrees) {
-  const angleInRadians = (angleInDegrees - 90) * Math.PI / 180;
-
-  return {
-    x: cx + r * Math.cos(angleInRadians),
-    y: cy + r * Math.sin(angleInRadians)
-  };
-}
-function getIcon(name) {
-  if (name.includes("ふぐ")) return "🐡";
-  if (name.includes("寿司")) return "🍣";
-  return "🏢";
-}
-
-function buildGaugeCards(data) {
-  const rows = [
-    ...(data.businesses || []),
-    data.total
-  ].filter(Boolean);
-
-  const order = ["ふぐ", "寿司", "全社"];
-
-  return order.flatMap((businessName) => {
-    const row = rows.find((item) => item.business === businessName);
-
-    if (!row) return [];
-
-    return [
-      {
-        business: businessName,
-        period: "当日",
-        sales: row.dailySales,
-        yoy: row.yoy,
-        unitType: "thousand"
-      },
-      {
-        business: businessName,
-        period: "月間",
-        sales: row.monthlySales,
-        yoy: row.yoy,
-        unitType: "thousand"
-      },
-      {
-        business: businessName,
-        period: "年累計",
-        sales: row.yearlySales,
-        yoy: row.yoy,
-        unitType: "million"
-      }
-    ];
-  });
-}
-
-function RankingSection({ rankings }) {
-   console.log("rankings", rankings);
-if (!rankings) return <div style={{ color: "white" }}>ランキングデータなし</div>;
-//  if (!rankings) return null;
-
-  return (
-    <div className="ranking-section">
-      <h2>店舗前年比ランキング TOP10</h2>
-
-      <div className="ranking-grid">
-        <RankingTable title="🍣 寿司 TOP10" rows={rankings.sushi || []} />
-        <RankingTable title="🐡 ふぐ TOP10" rows={rankings.fugu || []} />
-      </div>
-    </div>
-  );
-}
-
-function RankingTable({ title, rows }) {
-  return (
-    <div className="ranking-card">
-      <h3>{title}</h3>
-
-      <table>
-        <thead>
-          <tr>
-            <th>順位</th>
-            <th>店舗</th>
-            <th>月間売上</th>
-            <th>前年比</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={`${title}-${row.rank}-${row.store}`}>
-              <td>{row.rank}</td>
-              <td>{row.store}</td>
-              <td>{Number(row.sales).toLocaleString("ja-JP", { maximumFractionDigits: 0 })} 千円</td>
-              <td className={row.yoy >= 100 ? "good" : "bad"}>
-                {Number(row.yoy).toFixed(1)}%
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 function buildMainGaugeCards(data) {
-  const rows = [
-    ...(data.businesses || []),
-    data.total
-  ].filter(Boolean);
-
-  const order = ["ふぐ", "寿司", "全社"];
-
-  return order.map((businessName) => {
-    const row = rows.find((item) => item.business === businessName);
-
- return {
-  business: businessName,
-  period: "月間",
-  sales: row?.monthlySales || 0,
-  dailySales: row?.dailySales || 0,
-  yearlySales: row?.yearlySales || 0,
-  yoy: row?.yoy || 0,
-  unitType: "thousand"
-};
-  });
-}
-
-function buildSummaryCards(data) {
   const rows = [
     ...(data.businesses || []),
     data.total
@@ -304,32 +373,21 @@ function buildSummaryCards(data) {
 
     return {
       business: businessName,
-      dailySales: row?.dailySales || 0,
-      yearlySales: row?.yearlySales || 0
+      period: "月間",
+      sales: row?.monthlySales ?? 0,
+      dailySales: row?.dailySales ?? 0,
+      yearlySales: row?.yearlySales ?? 0,
+      yoy: row?.yoy ?? 0,
+      unitType: "thousand"
     };
   });
 }
 
-function buildFiscalYearTrendRows(trends, salesDate) {
-  if (!salesDate) return [];
+function formatSalesDate(value) {
+  if (!value) return "";
 
-  const year = Number(String(salesDate).slice(0, 4));
-  const month = Number(String(salesDate).slice(4, 6));
-
-  const fiscalStartYear = month >= 10 ? year : year - 1;
-  const start = Number(`${fiscalStartYear}1001`);
-  const end = Number(`${fiscalStartYear + 1}0930`);
-
-  return trends
-    .filter((row) => {
-      const d = Number(row.salesDate);
-      return d >= start && d <= end && row.business === "寿司";
-    })
-    .sort((a, b) => Number(a.salesDate) - Number(b.salesDate))
-    .map((row) => ({
-      date: formatShortDate(row.salesDate),
-      sales: Number(row.monthlySales || 0)
-    }));
+  const str = String(value);
+  return `${Number(str.slice(0, 4))}年${Number(str.slice(4, 6))}月${Number(str.slice(6, 8))}日`;
 }
 
 function formatShortDate(value) {
@@ -337,125 +395,48 @@ function formatShortDate(value) {
   return `${Number(str.slice(4, 6))}/${Number(str.slice(6, 8))}`;
 }
 
-function SimpleLineChart({ rows }) {
-  const width = 1000;
-  const height = 260;
-  const padding = 40;
+function formatDateTime(value) {
+  if (!value) return "";
+  const date = new Date(value);
 
-  const max = Math.max(...rows.map((r) => r.sales), 1);
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
 
-  const points = rows.map((row, index) => {
-    const x = padding + (index / Math.max(rows.length - 1, 1)) * (width - padding * 2);
-    const y = height - padding - (row.sales / max) * (height - padding * 2);
-    return { ...row, x, y };
-  });
-
-  const path = points
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
-    .join(" ");
-
-  return (
-    <div className="trend-card">
-      <svg viewBox={`0 0 ${width} ${height}`} className="trend-chart">
-        <path d={path} className="trend-line" fill="none" />
-
-        {points.map((p, index) => (
-          <circle key={index} cx={p.x} cy={p.y} r="3" className="trend-point">
-            <title>{p.date}：{p.sales.toLocaleString("ja-JP")} 千円</title>
-          </circle>
-        ))}
-      </svg>
-    </div>
-  );
+  return date.toLocaleString("ja-JP");
 }
 
-function SalesTrendSection({ trends, salesDate }) {
-  const rows = buildFiscalYearMonthlyTrendRows(trends, salesDate);
+function formatSalesValue(value, unitType) {
+  const sales = safeNumber(value);
 
-  if (rows.length === 0) return null;
+  if (unitType === "million") {
+    return `${(sales / 100).toLocaleString("ja-JP", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1
+    })} 億円`;
+  }
 
-  return (
-    <div className="trend-section">
-      <h2>期初から期末までの月間売上推移</h2>
-
-      <div className="trend-legend">
-        <span>🍣 寿司</span>
-        <span>🐡 ふぐ</span>
-      </div>
-
-      <SimpleLineChart rows={rows} />
-    </div>
-  );
+  return `${sales.toLocaleString("ja-JP", {
+    maximumFractionDigits: 0
+  })} 千円`;
 }
 
-function buildFiscalYearMonthlyTrendRows(trends, salesDate) {
-  if (!salesDate) return [];
-
-  const year = Number(String(salesDate).slice(0, 4));
-  const month = Number(String(salesDate).slice(4, 6));
-
-  const fiscalStartYear = month >= 10 ? year : year - 1;
-  const start = Number(`${fiscalStartYear}1001`);
-  const end = Number(`${fiscalStartYear + 1}0930`);
-
-  const map = new Map();
-
-  (trends || [])
-    .filter((row) => {
-      const d = Number(row.salesDate);
-      return d >= start && d <= end;
-    })
-    .forEach((row) => {
-      const key = String(row.salesDate);
-      const current = map.get(key) || {
-        salesDate: key,
-        label: formatShortDate(key),
-        sushi: null,
-        fugu: null
-      };
-
-      if (row.business === "寿司") {
-        current.sushi = Number(row.monthlySales || 0);
-      }
-
-      if (row.business === "ふぐ") {
-        current.fugu = Number(row.monthlySales || 0);
-      }
-
-      map.set(key, current);
-    });
-
-  return Array.from(map.values())
-    .sort((a, b) => Number(a.salesDate) - Number(b.salesDate));
+function safeNumber(value) {
+  const num = Number(value ?? 0);
+  return Number.isFinite(num) ? num : 0;
 }
 
+function polarToCartesian(cx, cy, r, angleInDegrees) {
+  const angleInRadians = (angleInDegrees - 90) * Math.PI / 180;
 
-
-function buildChartPoints(rows, key, width, height, padding, max) {
-  return rows
-    .map((row, index) => {
-      const value = row[key];
-
-      if (value === null || value === undefined || value === 0) {
-        return null;
-      }
-
-      const x = padding + (index / Math.max(rows.length - 1, 1)) * (width - padding * 2);
-      const y = height - padding - (value / max) * (height - padding * 2);
-
-      return {
-        salesDate: row.salesDate,
-        label: row.label,
-        value,
-        x,
-        y
-      };
-    })
-    .filter(Boolean);
+  return {
+    x: cx + r * Math.cos(angleInRadians),
+    y: cy + r * Math.sin(angleInRadians)
+  };
 }
 
-function pointsToPath(points) {
-  return points
-    .map((p, index) => `${index === 0 ? "M" : "L"} ${p.x} ${p.y}`)
-    .join(" ");
+function getIcon(name) {
+  if (name.includes("ふぐ")) return "🐡";
+  if (name.includes("寿司")) return "🍣";
+  return "🏢";
 }
