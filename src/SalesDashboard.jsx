@@ -311,18 +311,12 @@ function buildSummaryCards(data) {
 }
 
 function SalesTrendSection({ trends, salesDate }) {
-  const rows = buildFiscalYearTrendRows(trends, salesDate);
-
-  if (rows.length === 0) return null;
-
   return (
-    <div className="trend-section">
-      <h2>期初から期末までの売上推移</h2>
-      <SimpleLineChart rows={rows} />
+    <div style={{ color: "white", padding: "20px", border: "1px solid red" }}>
+      グラフテスト / trends件数: {trends.length} / salesDate: {salesDate}
     </div>
   );
 }
-
 function buildFiscalYearTrendRows(trends, salesDate) {
   if (!salesDate) return [];
 
