@@ -36,9 +36,9 @@ export default function SalesDashboard() {
         ))}
       </div>
 
-      <SalesTrendSection trends={data.trends || []} salesDate={data.salesDate} />
-
       <RankingSection rankings={data.rankings} />
+
+      <SalesTrendSection trends={data.trends || []} salesDate={data.salesDate} />
     </div>
   );
 }
