@@ -295,3 +295,96 @@
   font-size: 22px;
   font-weight: 700;
 }
+
+.trend-section {
+  margin-top: 28px;
+}
+
+.trend-section h2 {
+  color: #fff;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.trend-card {
+  background: #05070a;
+  border: 1px solid #7a6500;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.trend-chart {
+  width: 100%;
+  height: 260px;
+}
+
+.trend-line {
+  stroke: #22c55e;
+  stroke-width: 3;
+}
+
+.trend-point {
+  fill: #ffffff;
+  stroke: #22c55e;
+  stroke-width: 2;
+}
+
+.trend-section {
+  margin-top: 28px;
+}
+
+.trend-section h2 {
+  color: #fff;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.trend-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  color: #fff;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.trend-card {
+  background: #05070a;
+  border: 1px solid #7a6500;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.trend-chart {
+  width: 100%;
+  height: 320px;
+}
+
+.trend-axis {
+  stroke: rgba(255, 255, 255, 0.25);
+  stroke-width: 1;
+}
+
+.trend-line {
+  stroke-width: 3;
+}
+
+.trend-line.sushi {
+  stroke: #22c55e;
+}
+
+.trend-line.fugu {
+  stroke: #38bdf8;
+}
+
+.trend-point.sushi {
+  fill: #ffffff;
+  stroke: #22c55e;
+  stroke-width: 2;
+}
+
+.trend-point.fugu {
+  fill: #ffffff;
+  stroke: #38bdf8;
+  stroke-width: 2;
+}

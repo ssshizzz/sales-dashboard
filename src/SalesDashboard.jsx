@@ -32,13 +32,15 @@ export default function SalesDashboard() {
         </div>
       </div>
 
-      <div className="gauge-grid">
-        {cards.map((item) => (
-        <SalesGaugeCard key={item.business} item={item} />
-        ))}
-      </div>
- 
-       <RankingSection rankings={data.rankings} />
+<div className="gauge-grid">
+  {cards.map((item) => (
+    <SalesGaugeCard key={item.business} item={item} />
+  ))}
+</div>
+
+<SalesTrendSection trends={data.trends || []} salesDate={data.salesDate} />
+
+<RankingSection rankings={data.rankings} />
     </div>
   );
 }
@@ -308,3 +310,206 @@ function buildSummaryCards(data) {
   });
 }
 
+function SalesTrendSection({ trends, salesDate }) {
+  const rows = buildFiscalYearTrendRows(trends, salesDate);
+
+  if (rows.length === 0) return null;
+
+  return (
+    <div className="trend-section">
+      <h2>期初から期末までの売上推移</h2>
+      <SimpleLineChart rows={rows} />
+    </div>
+  );
+}
+
+function buildFiscalYearTrendRows(trends, salesDate) {
+  if (!salesDate) return [];
+
+  const year = Number(String(salesDate).slice(0, 4));
+  const month = Number(String(salesDate).slice(4, 6));
+
+  const fiscalStartYear = month >= 10 ? year : year - 1;
+  const start = Number(`${fiscalStartYear}1001`);
+  const end = Number(`${fiscalStartYear + 1}0930`);
+
+  return trends
+    .filter((row) => {
+      const d = Number(row.salesDate);
+      return d >= start && d <= end && row.business === "寿司";
+    })
+    .sort((a, b) => Number(a.salesDate) - Number(b.salesDate))
+    .map((row) => ({
+      date: formatShortDate(row.salesDate),
+      sales: Number(row.monthlySales || 0)
+    }));
+}
+
+function formatShortDate(value) {
+  const str = String(value);
+  return `${Number(str.slice(4, 6))}/${Number(str.slice(6, 8))}`;
+}
+
+function SimpleLineChart({ rows }) {
+  const width = 1000;
+  const height = 260;
+  const padding = 40;
+
+  const max = Math.max(...rows.map((r) => r.sales), 1);
+
+  const points = rows.map((row, index) => {
+    const x = padding + (index / Math.max(rows.length - 1, 1)) * (width - padding * 2);
+    const y = height - padding - (row.sales / max) * (height - padding * 2);
+    return { ...row, x, y };
+  });
+
+  const path = points
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
+    .join(" ");
+
+  return (
+    <div className="trend-card">
+      <svg viewBox={`0 0 ${width} ${height}`} className="trend-chart">
+        <path d={path} className="trend-line" fill="none" />
+
+        {points.map((p, index) => (
+          <circle key={index} cx={p.x} cy={p.y} r="3" className="trend-point">
+            <title>{p.date}：{p.sales.toLocaleString("ja-JP")} 千円</title>
+          </circle>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function SalesTrendSection({ trends, salesDate }) {
+  const rows = buildFiscalYearMonthlyTrendRows(trends, salesDate);
+
+  if (rows.length === 0) return null;
+
+  return (
+    <div className="trend-section">
+      <h2>期初から期末までの月間売上推移</h2>
+
+      <div className="trend-legend">
+        <span>🍣 寿司</span>
+        <span>🐡 ふぐ</span>
+      </div>
+
+      <SimpleLineChart rows={rows} />
+    </div>
+  );
+}
+
+function buildFiscalYearMonthlyTrendRows(trends, salesDate) {
+  if (!salesDate) return [];
+
+  const year = Number(String(salesDate).slice(0, 4));
+  const month = Number(String(salesDate).slice(4, 6));
+
+  const fiscalStartYear = month >= 10 ? year : year - 1;
+  const start = Number(`${fiscalStartYear}1001`);
+  const end = Number(`${fiscalStartYear + 1}0930`);
+
+  const map = new Map();
+
+  (trends || [])
+    .filter((row) => {
+      const d = Number(row.salesDate);
+      return d >= start && d <= end;
+    })
+    .forEach((row) => {
+      const key = String(row.salesDate);
+      const current = map.get(key) || {
+        salesDate: key,
+        label: formatShortDate(key),
+        sushi: null,
+        fugu: null
+      };
+
+      if (row.business === "寿司") {
+        current.sushi = Number(row.monthlySales || 0);
+      }
+
+      if (row.business === "ふぐ") {
+        current.fugu = Number(row.monthlySales || 0);
+      }
+
+      map.set(key, current);
+    });
+
+  return Array.from(map.values())
+    .sort((a, b) => Number(a.salesDate) - Number(b.salesDate));
+}
+
+function formatShortDate(value) {
+  const str = String(value);
+  return `${Number(str.slice(4, 6))}/${Number(str.slice(6, 8))}`;
+}
+
+function SimpleLineChart({ rows }) {
+  const width = 1000;
+  const height = 320;
+  const padding = 48;
+
+  const max = Math.max(
+    ...rows.flatMap((r) => [r.sushi || 0, r.fugu || 0]),
+    1
+  );
+
+  const sushiPoints = buildChartPoints(rows, "sushi", width, height, padding, max);
+  const fuguPoints = buildChartPoints(rows, "fugu", width, height, padding, max);
+
+  return (
+    <div className="trend-card">
+      <svg viewBox={`0 0 ${width} ${height}`} className="trend-chart">
+        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} className="trend-axis" />
+        <line x1={padding} y1={padding} x2={padding} y2={height - padding} className="trend-axis" />
+
+        <path d={pointsToPath(sushiPoints)} className="trend-line sushi" fill="none" />
+        <path d={pointsToPath(fuguPoints)} className="trend-line fugu" fill="none" />
+
+        {sushiPoints.map((p) => (
+          <circle key={`sushi-${p.salesDate}`} cx={p.x} cy={p.y} r="3" className="trend-point sushi">
+            <title>{p.label} 寿司：{Math.round(p.value).toLocaleString("ja-JP")} 千円</title>
+          </circle>
+        ))}
+
+        {fuguPoints.map((p) => (
+          <circle key={`fugu-${p.salesDate}`} cx={p.x} cy={p.y} r="3" className="trend-point fugu">
+            <title>{p.label} ふぐ：{Math.round(p.value).toLocaleString("ja-JP")} 千円</title>
+          </circle>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function buildChartPoints(rows, key, width, height, padding, max) {
+  return rows
+    .map((row, index) => {
+      const value = row[key];
+
+      if (value === null || value === undefined || value === 0) {
+        return null;
+      }
+
+      const x = padding + (index / Math.max(rows.length - 1, 1)) * (width - padding * 2);
+      const y = height - padding - (value / max) * (height - padding * 2);
+
+      return {
+        salesDate: row.salesDate,
+        label: row.label,
+        value,
+        x,
+        y
+      };
+    })
+    .filter(Boolean);
+}
+
+function pointsToPath(points) {
+  return points
+    .map((p, index) => `${index === 0 ? "M" : "L"} ${p.x} ${p.y}`)
+    .join(" ");
+}
