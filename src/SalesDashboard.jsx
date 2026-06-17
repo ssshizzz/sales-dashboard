@@ -310,13 +310,6 @@ function buildSummaryCards(data) {
   });
 }
 
-function SalesTrendSection({ trends, salesDate }) {
-  return (
-    <div style={{ color: "white", padding: "20px", border: "1px solid red" }}>
-      グラフテスト / trends件数: {trends.length} / salesDate: {salesDate}
-    </div>
-  );
-}
 function buildFiscalYearTrendRows(trends, salesDate) {
   if (!salesDate) return [];
 
@@ -436,48 +429,7 @@ function buildFiscalYearMonthlyTrendRows(trends, salesDate) {
     .sort((a, b) => Number(a.salesDate) - Number(b.salesDate));
 }
 
-function formatShortDate(value) {
-  const str = String(value);
-  return `${Number(str.slice(4, 6))}/${Number(str.slice(6, 8))}`;
-}
 
-function SimpleLineChart({ rows }) {
-  const width = 1000;
-  const height = 320;
-  const padding = 48;
-
-  const max = Math.max(
-    ...rows.flatMap((r) => [r.sushi || 0, r.fugu || 0]),
-    1
-  );
-
-  const sushiPoints = buildChartPoints(rows, "sushi", width, height, padding, max);
-  const fuguPoints = buildChartPoints(rows, "fugu", width, height, padding, max);
-
-  return (
-    <div className="trend-card">
-      <svg viewBox={`0 0 ${width} ${height}`} className="trend-chart">
-        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} className="trend-axis" />
-        <line x1={padding} y1={padding} x2={padding} y2={height - padding} className="trend-axis" />
-
-        <path d={pointsToPath(sushiPoints)} className="trend-line sushi" fill="none" />
-        <path d={pointsToPath(fuguPoints)} className="trend-line fugu" fill="none" />
-
-        {sushiPoints.map((p) => (
-          <circle key={`sushi-${p.salesDate}`} cx={p.x} cy={p.y} r="3" className="trend-point sushi">
-            <title>{p.label} 寿司：{Math.round(p.value).toLocaleString("ja-JP")} 千円</title>
-          </circle>
-        ))}
-
-        {fuguPoints.map((p) => (
-          <circle key={`fugu-${p.salesDate}`} cx={p.x} cy={p.y} r="3" className="trend-point fugu">
-            <title>{p.label} ふぐ：{Math.round(p.value).toLocaleString("ja-JP")} 千円</title>
-          </circle>
-        ))}
-      </svg>
-    </div>
-  );
-}
 
 function buildChartPoints(rows, key, width, height, padding, max) {
   return rows
