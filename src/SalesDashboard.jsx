@@ -217,11 +217,11 @@ function buildFiscalYearMonthlyTrendRows(trends, salesDate) {
       };
 
       if (row.business === "寿司") {
-        current.sushi = safeNumber(row.monthlySales);
+        current.sushi = safeNumber(row.yearlySales);
       }
 
       if (row.business === "ふぐ") {
-        current.fugu = safeNumber(row.monthlySales);
+        current.fugu = safeNumber(row.yearlySales);
       }
 
       map.set(key, current);
