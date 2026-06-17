@@ -24,7 +24,7 @@ export default function SalesDashboard() {
     <div className="sales-page">
       <div className="sales-header">
         <div>
-          <h1>{formatSalesDate(data.salesDate)} 売上状況ダッシュボード</h1>
+          <h1>{formatSalesDate(data.salesDate)} 売上状況ダッシュボードtest</h1>
 
         </div>
         <div className="updated">
