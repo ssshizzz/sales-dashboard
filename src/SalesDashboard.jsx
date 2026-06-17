@@ -93,7 +93,7 @@ function SalesTrendSection({ trends, salesDate }) {
   if (rows.length === 0) {
     return (
       <div className="trend-section">
-        <h2>期初から期末までの月間売上推移</h2>
+        <h2>期初から期末までの月間売上推移（データクレンジング中）</h2>
         <div className="trend-card trend-empty">
           売上履歴データがありません
         </div>
