@@ -143,16 +143,6 @@ function FiscalYearLineChart({ rows }) {
   return (
     <div className="trend-card">
       <svg viewBox={`0 0 ${width} ${height}`} className="trend-chart">
-        {monthLabels.map((label, idx) => (
-         <text
-           key={label}
-           x={padding + (idx * (width - padding * 2) / 11)}
-           y={height - 15}
-           className="axis-label"
-         >
-          {label}
-         </text>
-))}
         <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} className="trend-axis" />
         <line x1={padding} y1={padding} x2={padding} y2={height - padding} className="trend-axis" />
 
@@ -163,15 +153,15 @@ function FiscalYearLineChart({ rows }) {
             y={padding + idx * ((height - padding * 2) / 5)}
             className="axis-label y-axis-label"
           >
-            {(value / 100000).toFixed(0)}億
+            {(value / 100000000).toFixed(0)}億
           </text>
         ))}
 
         {monthLabels.map((label, idx) => (
           <text
-            key={label}
+            key={`month-${label}`}
             x={padding + (idx * (width - padding * 2) / 11)}
-            y={height - 18}
+            y={height - 15}
             className="axis-label x-axis-label"
           >
             {label}
@@ -184,7 +174,7 @@ function FiscalYearLineChart({ rows }) {
 
         {totalPoints.map((point) => (
           <circle key={`total-${point.month}`} cx={point.x} cy={point.y} r="4" className="trend-point total">
-            <title>{point.month} 全社：{Math.round(point.value).toLocaleString("ja-JP")} 千円</title>
+            <title>{point.month} 全社：{Math.round(point.value).toLocaleString("ja-JP")} 円</title>
           </circle>
         ))}
       </svg>
