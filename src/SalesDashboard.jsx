@@ -39,6 +39,7 @@ export default function SalesDashboard() {
       <RankingSection rankings={data.rankings} />
 
       <SalesTrendSection trendChart={data.trendChart || []} />
+      <MonthlySalesTrendSection trendChart={data.trendChart || []} />
     </div>
   );
 }
@@ -115,7 +116,49 @@ function SalesTrendSection({ trendChart }) {
   );
 }
 
-function FiscalYearLineChart({ rows }) {
+function MonthlySalesTrendSection({ trendChart }) {
+  const currentMonth = new Date().getMonth() + 1;
+
+  const rows = (trendChart || [])
+    .map((row) => ({
+      month: formatMonthLabel(row.month),
+      monthNumber: Number(String(row.month).slice(4, 6)),
+      sushi: safeNumber(row.sushiMonth),
+      fugu: safeNumber(row.fuguMonth),
+      total: safeNumber(row.totalMonth)
+    }))
+    .map((row) => {
+      if (row.monthNumber === currentMonth) {
+        return {
+          ...row,
+          sushi: null,
+          fugu: null,
+          total: null
+        };
+      }
+
+      return row;
+    });
+
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="trend-section">
+      <h2>月別売上推移（当月除く）【開発中】</h2>
+
+      <div className="trend-legend">
+        <span><span className="legend-line fugu"></span>🐡 ふぐ</span>
+        <span><span className="legend-line sushi"></span>🍣 寿司</span>
+        <span><span className="legend-line total"></span>🏢 全社</span>
+      </div>
+
+      <FiscalYearLineChart rows={rows} excludeCurrentMonth />
+    </div>
+  );
+}
+function FiscalYearLineChart({ rows, excludeCurrentMonth = false }) {
   const width = 1000;
   const height = 320;
   const padding = 60;
@@ -131,21 +174,51 @@ function FiscalYearLineChart({ rows }) {
   const currentMonthLabel = `${currentMonth}月`;
   const currentIndex = monthOrder.indexOf(currentMonthLabel);
 
-  const visibleRows = rows.filter((row) => {
-    const rowIndex = monthOrder.indexOf(row.month);
-    return rowIndex >= 0 && rowIndex <= currentIndex;
+  const axisRows = monthOrder.map((month) => {
+    const found = rows.find((row) => row.month === month);
+
+    return found || {
+      month,
+      sushi: null,
+      fugu: null,
+      total: null
+    };
+  });
+
+  const chartRows = axisRows.map((row, index) => {
+    if (currentIndex >= 0 && index > currentIndex) {
+      return {
+        ...row,
+        sushi: null,
+        fugu: null,
+        total: null
+      };
+    }
+
+    if (excludeCurrentMonth && currentIndex >= 0 && index === currentIndex) {
+      return {
+        ...row,
+        sushi: null,
+        fugu: null,
+        total: null
+      };
+    }
+
+    return row;
   });
 
   const max = Math.max(
-    ...visibleRows.flatMap((row) => [row.sushi, row.fugu, row.total]),
+    ...chartRows.flatMap((row) => [
+      row.sushi ?? 0,
+      row.fugu ?? 0,
+      row.total ?? 0
+    ]),
     1
   );
 
-  const sushiPoints = buildChartPoints(visibleRows, "sushi", width, height, padding, max);
-  const fuguPoints = buildChartPoints(visibleRows, "fugu", width, height, padding, max);
-  const totalPoints = buildChartPoints(visibleRows, "total", width, height, padding, max);
-
-  
+  const sushiPoints = buildChartPoints(chartRows, "sushi", width, height, padding, max);
+  const fuguPoints = buildChartPoints(chartRows, "fugu", width, height, padding, max);
+  const totalPoints = buildChartPoints(chartRows, "total", width, height, padding, max);
 
   const scaleLabels = [];
   for (let i = 0; i <= 5; i++) {
@@ -181,12 +254,12 @@ function FiscalYearLineChart({ rows }) {
           </text>
         ))}
 
-        {visibleRows.map((row, idx) => (
+        {axisRows.map((row, idx) => (
           <text
             key={`month-${row.month}`}
             x={
               padding +
-              (idx / Math.max(visibleRows.length - 1, 1)) *
+              (idx / Math.max(axisRows.length - 1, 1)) *
                 (width - padding * 2)
             }
             y={height - 15}
@@ -219,20 +292,27 @@ function FiscalYearLineChart({ rows }) {
 }
 
 function buildChartPoints(rows, key, width, height, padding, max) {
-  return rows.map((row, index) => {
-    const value = safeNumber(row[key]);
-    const x = padding + (index / Math.max(rows.length - 1, 1)) * (width - padding * 2);
-    const y = height - padding - (value / max) * (height - padding * 2);
+  return rows
+    .map((row, index) => {
+      const rawValue = row[key];
 
-    return {
-      month: row.month,
-      value,
-      x,
-      y
-    };
-  });
+      if (rawValue == null) {
+        return null;
+      }
+
+      const value = safeNumber(rawValue);
+      const x = padding + (index / Math.max(rows.length - 1, 1)) * (width - padding * 2);
+      const y = height - padding - (value / max) * (height - padding * 2);
+
+      return {
+        month: row.month,
+        value,
+        x,
+        y
+      };
+    })
+    .filter(Boolean);
 }
-
 function pointsToPath(points) {
   return points
     .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
