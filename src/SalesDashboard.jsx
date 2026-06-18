@@ -38,7 +38,7 @@ export default function SalesDashboard() {
 
       <RankingSection rankings={data.rankings} />
 
-      <SalesTrendSection trends={data.trends || []} salesDate={data.salesDate} />
+      <SalesTrendSection trendChart={data.trendChart || []} />
     </div>
   );
 }
@@ -87,33 +87,93 @@ function SalesGaugeCard({ item }) {
   );
 }
 
-function SalesTrendSection({ trends, salesDate }) {
-  const rows = buildFiscalYearMonthlyTrendRows(trends, salesDate);
+function SalesTrendSection({ trendChart }) {
+  const rows = (trendChart || []).map((row) => ({
+    month: formatMonthLabel(row.month),
+    sushi: safeNumber(row.sushiCumulative),
+    fugu: safeNumber(row.fuguCumulative),
+    total: safeNumber(row.totalCumulative)
+  }));
 
   if (rows.length === 0) {
-    return (
-      <div className="trend-section">
-        <h2>期初から期末までの月間売上推移（データクレンジング中）</h2>
-        <div className="trend-card trend-empty">
-          売上履歴データがありません
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
     <div className="trend-section">
-      <h2>期初から期末までの月間売上推移</h2>
+      <h2>期初から期末までの累積売上推移</h2>
 
       <div className="trend-legend">
         <span>🍣 寿司</span>
         <span>🐡 ふぐ</span>
+        <span>🏢 全社</span>
       </div>
 
       <FiscalYearLineChart rows={rows} />
     </div>
   );
 }
+
+function FiscalYearLineChart({ rows }) {
+  const width = 1000;
+  const height = 320;
+  const padding = 48;
+
+  const max = Math.max(
+    ...rows.flatMap((row) => [row.sushi, row.fugu, row.total]),
+    1
+  );
+
+  const sushiPoints = buildChartPoints(rows, "sushi", width, height, padding, max);
+  const fuguPoints = buildChartPoints(rows, "fugu", width, height, padding, max);
+  const totalPoints = buildChartPoints(rows, "total", width, height, padding, max);
+
+  return (
+    <div className="trend-card">
+      <svg viewBox={`0 0 ${width} ${height}`} className="trend-chart">
+        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} className="trend-axis" />
+        <line x1={padding} y1={padding} x2={padding} y2={height - padding} className="trend-axis" />
+
+        <path d={pointsToPath(sushiPoints)} className="trend-line sushi" fill="none" />
+        <path d={pointsToPath(fuguPoints)} className="trend-line fugu" fill="none" />
+        <path d={pointsToPath(totalPoints)} className="trend-line total" fill="none" />
+
+        {totalPoints.map((point) => (
+          <circle key={`total-${point.month}`} cx={point.x} cy={point.y} r="3" className="trend-point total">
+            <title>{point.month} 全社：{Math.round(point.value).toLocaleString("ja-JP")} 千円</title>
+          </circle>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function buildChartPoints(rows, key, width, height, padding, max) {
+  return rows.map((row, index) => {
+    const value = safeNumber(row[key]);
+    const x = padding + (index / Math.max(rows.length - 1, 1)) * (width - padding * 2);
+    const y = height - padding - (value / max) * (height - padding * 2);
+
+    return {
+      month: row.month,
+      value,
+      x,
+      y
+    };
+  });
+}
+
+function pointsToPath(points) {
+  return points
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+    .join(" ");
+}
+
+function formatMonthLabel(value) {
+  const str = String(value);
+  return `${Number(str.slice(4, 6))}月`;
+}
+
 
 function FiscalYearLineChart({ rows }) {
   const width = 1000;
