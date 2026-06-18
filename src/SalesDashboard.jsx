@@ -101,7 +101,7 @@ function SalesTrendSection({ trendChart }) {
 
   return (
     <div className="trend-section">
-      <h2>期初から期末までの累積売上推移</h2>
+      <h2>期初から期末までの累積売上推移【開発中】</h2>
 
       <div className="trend-legend">
         <span>🍣 寿司</span>
@@ -117,7 +117,7 @@ function SalesTrendSection({ trendChart }) {
 function FiscalYearLineChart({ rows }) {
   const width = 1000;
   const height = 320;
-  const padding = 48;
+  const padding = 60;
 
   const max = Math.max(
     ...rows.flatMap((row) => [row.sushi, row.fugu, row.total]),
@@ -128,18 +128,62 @@ function FiscalYearLineChart({ rows }) {
   const fuguPoints = buildChartPoints(rows, "fugu", width, height, padding, max);
   const totalPoints = buildChartPoints(rows, "total", width, height, padding, max);
 
+  const monthLabels = [
+    "10月", "11月", "12月",
+    "1月", "2月", "3月",
+    "4月", "5月", "6月",
+    "7月", "8月", "9月"
+  ];
+
+  const scaleLabels = [];
+  for (let i = 0; i <= 5; i++) {
+    scaleLabels.push(Math.round(max * (5 - i) / 5));
+  }
+
   return (
     <div className="trend-card">
       <svg viewBox={`0 0 ${width} ${height}`} className="trend-chart">
+        {monthLabels.map((label, idx) => (
+         <text
+           key={label}
+           x={padding + (idx * (width - padding * 2) / 11)}
+           y={height - 15}
+           className="axis-label"
+         >
+          {label}
+         </text>
+))}
         <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} className="trend-axis" />
         <line x1={padding} y1={padding} x2={padding} y2={height - padding} className="trend-axis" />
+
+        {scaleLabels.map((value, idx) => (
+          <text
+            key={`scale-${idx}`}
+            x={padding - 10}
+            y={padding + idx * ((height - padding * 2) / 5)}
+            className="axis-label y-axis-label"
+          >
+            {(value / 100000).toFixed(0)}億
+          </text>
+        ))}
+
+        {monthLabels.map((label, idx) => (
+          <text
+            key={label}
+            x={padding + (idx * (width - padding * 2) / 11)}
+            y={height - 18}
+            className="axis-label x-axis-label"
+          >
+            {label}
+          </text>
+        ))}
 
         <path d={pointsToPath(sushiPoints)} className="trend-line sushi" fill="none" />
         <path d={pointsToPath(fuguPoints)} className="trend-line fugu" fill="none" />
         <path d={pointsToPath(totalPoints)} className="trend-line total" fill="none" />
 
         {totalPoints.map((point) => (
-          <circle key={`total-${point.month}`} cx={point.x} cy={point.y} r="3" className="trend-point total">
+          <circle key={`total-${point.month}`} cx={point.x} cy={point.y} r="4" className="trend-point total">
             <title>{point.month} 全社：{Math.round(point.value).toLocaleString("ja-JP")} 千円</title>
           </circle>
         ))}

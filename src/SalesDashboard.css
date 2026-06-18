@@ -398,3 +398,15 @@
   stroke: #facc15;
   stroke-width: 2;
 }
+.axis-label {
+  fill: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+}
+
+.x-axis-label {
+  text-anchor: middle;
+}
+
+.y-axis-label {
+  text-anchor: end;
+}
