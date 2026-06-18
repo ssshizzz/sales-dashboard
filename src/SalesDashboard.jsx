@@ -175,79 +175,7 @@ function formatMonthLabel(value) {
 }
 
 
-function FiscalYearLineChart({ rows }) {
-  const width = 1000;
-  const height = 320;
-  const padding = 48;
 
-  const max = Math.max(
-    ...rows.flatMap((row) => [
-      safeNumber(row.sushi),
-      safeNumber(row.fugu)
-    ]),
-    1
-  );
-
-  const sushiPoints = buildChartPoints(rows, "sushi", width, height, padding, max);
-  const fuguPoints = buildChartPoints(rows, "fugu", width, height, padding, max);
-
-  return (
-    <div className="trend-card">
-      <svg viewBox={`0 0 ${width} ${height}`} className="trend-chart">
-        <line
-          x1={padding}
-          y1={height - padding}
-          x2={width - padding}
-          y2={height - padding}
-          className="trend-axis"
-        />
-        <line
-          x1={padding}
-          y1={padding}
-          x2={padding}
-          y2={height - padding}
-          className="trend-axis"
-        />
-
-        {sushiPoints.length > 0 && (
-          <path d={pointsToPath(sushiPoints)} className="trend-line sushi" fill="none" />
-        )}
-
-        {fuguPoints.length > 0 && (
-          <path d={pointsToPath(fuguPoints)} className="trend-line fugu" fill="none" />
-        )}
-
-        {sushiPoints.map((point) => (
-          <circle
-            key={`sushi-${point.salesDate}`}
-            cx={point.x}
-            cy={point.y}
-            r="3"
-            className="trend-point sushi"
-          >
-            <title>
-              {point.label} 寿司：{Math.round(point.value).toLocaleString("ja-JP")} 千円
-            </title>
-          </circle>
-        ))}
-
-        {fuguPoints.map((point) => (
-          <circle
-            key={`fugu-${point.salesDate}`}
-            cx={point.x}
-            cy={point.y}
-            r="3"
-            className="trend-point fugu"
-          >
-            <title>
-              {point.label} ふぐ：{Math.round(point.value).toLocaleString("ja-JP")} 千円
-            </title>
-          </circle>
-        ))}
-      </svg>
-    </div>
-  );
-}
 
 function buildFiscalYearMonthlyTrendRows(trends, salesDate) {
   if (!salesDate) return [];
@@ -291,34 +219,7 @@ function buildFiscalYearMonthlyTrendRows(trends, salesDate) {
     .sort((a, b) => Number(a.salesDate) - Number(b.salesDate));
 }
 
-function buildChartPoints(rows, key, width, height, padding, max) {
-  return rows
-    .map((row, index) => {
-      const value = row[key];
 
-      if (value === null || value === undefined || !Number.isFinite(Number(value))) {
-        return null;
-      }
-
-      const x = padding + (index / Math.max(rows.length - 1, 1)) * (width - padding * 2);
-      const y = height - padding - (Number(value) / max) * (height - padding * 2);
-
-      return {
-        salesDate: row.salesDate,
-        label: row.label,
-        value: Number(value),
-        x,
-        y
-      };
-    })
-    .filter(Boolean);
-}
-
-function pointsToPath(points) {
-  return points
-    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
-    .join(" ");
-}
 
 function RankingSection({ rankings }) {
   if (!rankings) {

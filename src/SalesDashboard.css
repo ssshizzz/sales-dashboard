@@ -388,3 +388,13 @@
   stroke: #38bdf8;
   stroke-width: 2;
 }
+
+.trend-line.total {
+  stroke: #facc15;
+}
+
+.trend-point.total {
+  fill: #ffffff;
+  stroke: #facc15;
+  stroke-width: 2;
+}
