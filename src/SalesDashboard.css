@@ -319,16 +319,38 @@
 }
 
 .trend-line {
-  stroke: #22c55e;
+  fill: none;
   stroke-width: 3;
+}
+
+.trend-line.sushi {
+  stroke: #38bdf8;
+}
+
+.trend-line.fugu {
+  stroke: #22c55e;
+}
+
+.trend-line.total {
+  stroke: #facc15;
 }
 
 .trend-point {
   fill: #ffffff;
-  stroke: #22c55e;
   stroke-width: 2;
 }
 
+.trend-point.sushi {
+  stroke: #38bdf8;
+}
+
+.trend-point.fugu {
+  stroke: #22c55e;
+}
+
+.trend-point.total {
+  stroke: #facc15;
+}
 .trend-section {
   margin-top: 28px;
 }
@@ -369,25 +391,6 @@
   stroke-width: 3;
 }
 
-.trend-line.sushi {
-  stroke: #22c55e;
-}
-
-.trend-line.fugu {
-  stroke: #38bdf8;
-}
-
-.trend-point.sushi {
-  fill: #ffffff;
-  stroke: #22c55e;
-  stroke-width: 2;
-}
-
-.trend-point.fugu {
-  fill: #ffffff;
-  stroke: #38bdf8;
-  stroke-width: 2;
-}
 
 .trend-line.total {
   stroke: #facc15;
@@ -409,4 +412,25 @@
 
 .y-axis-label {
   text-anchor: end;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 3em;
+  height: 3px;
+  margin-right: 6px;
+  vertical-align: middle;
+  border-radius: 999px;
+}
+
+.legend-line.sushi {
+  background: #38bdf8;
+}
+
+.legend-line.fugu {
+  background: #22c55e;
+}
+
+.legend-line.total {
+  background: #facc15;
 }

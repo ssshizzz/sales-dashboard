@@ -95,6 +95,7 @@ function SalesTrendSection({ trendChart }) {
     total: safeNumber(row.totalCumulative)
   }));
 
+
   if (rows.length === 0) {
     return null;
   }
@@ -104,9 +105,9 @@ function SalesTrendSection({ trendChart }) {
       <h2>期初から期末までの累積売上推移【開発中】</h2>
 
       <div className="trend-legend">
-        <span>🍣 寿司</span>
-        <span>🐡 ふぐ</span>
-        <span>🏢 全社</span>
+       <span><span className="legend-line fugu"></span>🐡 ふぐ</span>
+       <span><span className="legend-line sushi"></span>🍣 寿司</span>
+       <span><span className="legend-line total"></span>🏢 全社</span>
       </div>
 
       <FiscalYearLineChart rows={rows} />
@@ -119,21 +120,32 @@ function FiscalYearLineChart({ rows }) {
   const height = 320;
   const padding = 60;
 
-  const max = Math.max(
-    ...rows.flatMap((row) => [row.sushi, row.fugu, row.total]),
-    1
-  );
-
-  const sushiPoints = buildChartPoints(rows, "sushi", width, height, padding, max);
-  const fuguPoints = buildChartPoints(rows, "fugu", width, height, padding, max);
-  const totalPoints = buildChartPoints(rows, "total", width, height, padding, max);
-
-  const monthLabels = [
+  const monthOrder = [
     "10月", "11月", "12月",
     "1月", "2月", "3月",
     "4月", "5月", "6月",
     "7月", "8月", "9月"
   ];
+
+  const currentMonth = new Date().getMonth() + 1;
+  const currentMonthLabel = `${currentMonth}月`;
+  const currentIndex = monthOrder.indexOf(currentMonthLabel);
+
+  const visibleRows = rows.filter((row) => {
+    const rowIndex = monthOrder.indexOf(row.month);
+    return rowIndex >= 0 && rowIndex <= currentIndex;
+  });
+
+  const max = Math.max(
+    ...visibleRows.flatMap((row) => [row.sushi, row.fugu, row.total]),
+    1
+  );
+
+  const sushiPoints = buildChartPoints(visibleRows, "sushi", width, height, padding, max);
+  const fuguPoints = buildChartPoints(visibleRows, "fugu", width, height, padding, max);
+  const totalPoints = buildChartPoints(visibleRows, "total", width, height, padding, max);
+
+  
 
   const scaleLabels = [];
   for (let i = 0; i <= 5; i++) {
@@ -143,8 +155,20 @@ function FiscalYearLineChart({ rows }) {
   return (
     <div className="trend-card">
       <svg viewBox={`0 0 ${width} ${height}`} className="trend-chart">
-        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} className="trend-axis" />
-        <line x1={padding} y1={padding} x2={padding} y2={height - padding} className="trend-axis" />
+        <line
+          x1={padding}
+          y1={height - padding}
+          x2={width - padding}
+          y2={height - padding}
+          className="trend-axis"
+        />
+        <line
+          x1={padding}
+          y1={padding}
+          x2={padding}
+          y2={height - padding}
+          className="trend-axis"
+        />
 
         {scaleLabels.map((value, idx) => (
           <text
@@ -157,14 +181,18 @@ function FiscalYearLineChart({ rows }) {
           </text>
         ))}
 
-        {monthLabels.map((label, idx) => (
+        {visibleRows.map((row, idx) => (
           <text
-            key={`month-${label}`}
-            x={padding + (idx * (width - padding * 2) / 11)}
+            key={`month-${row.month}`}
+            x={
+              padding +
+              (idx / Math.max(visibleRows.length - 1, 1)) *
+                (width - padding * 2)
+            }
             y={height - 15}
             className="axis-label x-axis-label"
           >
-            {label}
+            {row.month}
           </text>
         ))}
 
@@ -173,8 +201,16 @@ function FiscalYearLineChart({ rows }) {
         <path d={pointsToPath(totalPoints)} className="trend-line total" fill="none" />
 
         {totalPoints.map((point) => (
-          <circle key={`total-${point.month}`} cx={point.x} cy={point.y} r="4" className="trend-point total">
-            <title>{point.month} 全社：{Math.round(point.value).toLocaleString("ja-JP")} 円</title>
+          <circle
+            key={`total-${point.month}`}
+            cx={point.x}
+            cy={point.y}
+            r="4"
+            className="trend-point total"
+          >
+            <title>
+              {point.month} 全社：{Math.round(point.value).toLocaleString("ja-JP")} 円
+            </title>
           </circle>
         ))}
       </svg>
